@@ -15,7 +15,7 @@ else:
 setup(name='abeec',
       version=verstr,
       description='abeec: a library to perform approximate bayesian computation',
-      url='http://github.com/nespinoza/abc',
+      url='http://github.com/nespinoza/abec',
       author='Nestor Espinoza',
       author_email='nespinoza@stsci.edu',
       license='MIT',
