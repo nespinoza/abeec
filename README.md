@@ -3,7 +3,7 @@
 
 `abeec` is a sampler to perform Approximate Bayesian Computation (ABC) --- i.e., likelihood free posterior inference! It is based on the algorithm presented in [Ishida et al. (2015)](https://arxiv.org/abs/1504.06129).
 
-Author: Nestor Espinoza (nespinoza@stsci.edu)
+**Author**: Nestor Espinoza (nespinoza@stsci.edu)
 
 ## Statement of need
 While for Cosmological applications an ABC sampler has already been published by the team of Ishida et al (`cosmoabc` --- [check their repository!](https://github.com/COINtoolbox/CosmoABC)), 
@@ -18,7 +18,7 @@ To perform ABC on a given dataset, you need three ingredients:
 2. A `distance` to compute distances from simulated datasets to your dataset.
 3. And a `simulator`, to simulate datasets to compare against your dataset.
 
-In `abeec`, it is expected the user will provide *_classes_* defining the `prior`, the `distance` and the `simulator`. All the sampler does it take those and apply the iterative importance 
+In `abeec`, it is expected the user will provide **_classes_** defining the `prior`, the `distance` and the `simulator`. All the sampler does it take those and apply the iterative importance 
 sampling scheme outlined in [Ishida et al. (2015)](https://arxiv.org/abs/1504.06129), giving back a sample from the posterior. Once those classes are written, one might simply run the 
 sampler as:
 
