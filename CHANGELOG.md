@@ -9,3 +9,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - First (working) version of the algorithm.
 - Example usage for a TSO case under `examples`.
 - Installation files.
+### Upgraded
+- `setup.cfg` file has metadata info with long description.
