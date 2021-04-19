@@ -1,5 +1,9 @@
+import os
 import numpy as np
+import pickle
 from scipy.stats import multivariate_normal
+
+from ._version import __version__
 
 def get_weights(prior, old_weights, old_thetas, old_covariance, new_thetas, N):
     """ Function that calculates the (normalized) weights of each particle """
@@ -25,7 +29,7 @@ def get_weights(prior, old_weights, old_thetas, old_covariance, new_thetas, N):
 
     return weights/np.sum(weights)
 
-def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01):
+def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01, verbose = False, save_results = True, output_file = 'results.pkl'):
     """
     Given a dataset `data`, a function that return parameters sampled from the prior `prior_sampler`, a function 
     that runs simulations given parameters `simulator` and a `distance` function that given two datasets 
@@ -58,7 +62,27 @@ def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01):
         Convergence criterion for the ABC sampling scheme: minimum ratio between N and the number of draws necessary to 
         construct a particle system, K. 
 
+    verbose : boolean
+        If True, several statistics are printed out to the terminal to monitor the algorithm.
+
+    save_results : boolean
+        If `True`, results are saved to a pickle file. Default is true.
+
+    output_file : string
+        If `save_results` is `True`, results of the sampler will be saved to `output_file`. If `output_file` is found, sampling will not be 
+        made, and results will be read from this file.
+
     """
+
+    print('\n\t -----------------------------------------------')
+    print('\t \t abeec v'+__version__+' --- an ABC sampler\n')
+    print('\t  Author: Nestor Espinoza (nespinoza@stsci.edu)')
+    print('\t -----------------------------------------------')
+
+    if save_results and os.path.exists(output_file):
+        print('\n\t >> Results found on '+output_file+'. Reading them and skipping sampling...')
+        S = pickle.load(open(output_file, 'rb'))
+        return S
 
     # Check weird user inputs:
     if N > M:
@@ -67,7 +91,7 @@ def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01):
     ######################################################################
     # STEP 1: find the best particles on the initial draw from the prior #
     ######################################################################
-    print('\t >> 1. Starting ABC sampler...')
+    print('\n\t >> 1. Starting ABC sampler...')
 
     # First, generate set of samples from the prior:
     thetas = prior.sample(nsamples = M)
@@ -93,7 +117,7 @@ def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01):
     # Calculate and save inital weights:
     S[t]['weights'] = np.ones(N)/N
 
-    print('\t \t Initial N particles successfully generated.')
+    print('\t \t - Initial N particles successfully generated.')
 
     ######################################################################
     # STEP 2: iterate to find sub-particle systems of draws for t > 0    #
@@ -105,7 +129,7 @@ def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01):
     idx_N = np.arange(N)
 
     # Start iteration:
-    print('\t >> 2. Going to iterative importance sampling. Trying to reach ', Delta)
+    print('\n\t >> 2. Going to iterative importance sampling. Target Delta: '+str(Delta)+'.')
     while Current_Delta > Delta:
 
         # Initialize parameters for the current iteration:
@@ -159,6 +183,9 @@ def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01):
         S[t]['distances'] = np.copy(distances[idx])
 
         # Save the ordered thetas:
+        if verbose:
+            current_thetas = np.median(thetas, axis=0)
+            current_sigmas_on_thetas = np.sqrt(np.var(thetas, axis=0))
         thetas = tuple(thetas.T)
         S[t]['thetas'] = [parameter[idx] for parameter in thetas]
 
@@ -172,6 +199,22 @@ def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01):
         # Calculate the current delta to see if we've completed the sampling:
         Current_Delta = np.double(N)/np.double(K)
 
-        print('\t    At t = ',t,', current Delta is ', Current_Delta,' | Target Delta : ',Delta)
+        percent_delta = 1. - ((Current_Delta - Delta)/Current_Delta)
+        if percent_delta < 1.:
+            print('\n\t    - At t = '+str(t)+', current Delta is',Current_Delta,' | {0:.2f}% done'.format(percent_delta*100))
+        else:
+            print('\n\t    - At t = '+str(t)+', current Delta is',Current_Delta,' | 100% done (target Delta of '+str(Delta)+' reached)')
+        if verbose:
+            nparams = len(thetas)
+            print('\n\t \t Current parameter statistics:')
+            print('\t \t -----------------------------\n')
+            for i in range(nparams):
+                print('\t \t Parameter '+str(i+1)+' of '+str(nparams)+': {0:.10f} +/- {1:.10f}'.format(current_thetas[i], current_sigmas_on_thetas[i]))
 
+    print('\n\t >> ABC samples successfully generated!\n')
+
+    if save_results:
+        print('\n\t    - Saving results to '+output_file+' file...')
+        pickle.dump(S, open(output_file, 'wb'))
+        print('\n\t    - ...done!')
     return S
