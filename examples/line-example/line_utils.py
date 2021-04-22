@@ -4,12 +4,13 @@ from scipy.stats import loguniform
 class example_prior:
     """
     This example class defines an example prior class to handle both evaluations and 
-    sampling of the prior
+    sampling of the prior. This samples a slope (a), an intercept (b) and the standard-deviation (sigma) of 
+    the data.
     """
 
     def sample(self, nsamples = None):
         """
-        Function that sample points from the prior
+        Function that sample points from the prior. Uniform for the slope and intercept --- log-uniform for the standard-deviation.
         """
         if nsamples is None:
             nsamples = self.nsamples
@@ -88,6 +89,10 @@ class example_prior:
         self.nsamples = nsamples
 
 def gen_fake_data(length = 1000):
+    """
+    This function saves a file, `line_data.dat` with simulations from a line with slope `a`, intercept `b` and standard-deviation on the 
+    data of `sigma` of size `length`.
+    """
 
     # Define parameters:
     a, b, sigma = 10., 50., 20.
@@ -107,7 +112,7 @@ def gen_fake_data(length = 1000):
 class example_simulator:
     """
     This example class generates a simulator object that is able to simulate several or 
-    single simulations
+    single simulations. Simulates same data as the one in the `gen_fake_data()` function.
     """
 
     def single_simulation(self, parameters):

@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3] - [Unreleased]
 ### Added
 - `verbose` option on the `abecee.sampler`.
+- Added `abeec.utils` which so far has a `get_quantiles` function to obtain quantiles; useful for plotting posteriors.
 
 ## [0.2] - 2021-04-16
 ### Fixed
