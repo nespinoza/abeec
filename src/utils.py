@@ -1,5 +1,39 @@
 import numpy as np
 
+def function_quantiles(X, alpha = 0.68, method = 'median'):
+    """
+    If `X` is a matrix of length N x M, where there are N evaluations of a model at M index-points, this function returns the 
+    credibility band of the model given these samples.
+
+    Parameters
+    ----------
+
+    X : numpy.array
+        Array containing N evaluations of a model in the rows at M index (e.g., time-) points.
+    alpha : float
+        Credibility band percentage.
+    method : string
+        Method to use to generate the bands; `median` is default (and only supported mode for now).
+
+
+    Returns
+    -------
+    median_model : numpy.array
+        Array of length M denoting the median model
+    upper_band : numpy.array
+        Array of length M denoting the upper `alpha`*100 credibility band.
+    lower_band : numpy.array
+        Array of length M denoting the lower `alpha`*100 credibility band.
+
+    """
+
+    median_model, lower_band, upper_band = np.zeros(X.shape[1]), np.zeros(X.shape[1]), np.zeros(X.shape[1])
+
+    for i in range(X.shape[1]):
+        median_model[i], upper_band[i], lower_band[i] = get_quantiles(X[:,i])
+
+    return median_model, upper_band, lower_band
+
 def get_quantiles(dist,alpha = 0.68, method = 'median'):
     """ 
     get_quantiles function
