@@ -69,8 +69,9 @@ def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01, verbose = 
         If `True`, results are saved to a pickle file. Default is true.
 
     output_file : string
-        If `save_results` is `True`, results of the sampler will be saved to `output_file`. If `output_file` is found, sampling will not be 
-        made, and results will be read from this file.
+        If `save_results` is `True`, results of the sampler will be saved to `output_file`. If `output_file` is found, the factor N/K will be compared 
+        to the desired Delta; if smaller, sampling will not be made, and results will be read from this file. If larger, sampling will resume from where 
+        it took off.
 
     """
 
@@ -79,10 +80,41 @@ def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01, verbose = 
     print('\t  Author: Nestor Espinoza (nespinoza@stsci.edu)')
     print('\t -----------------------------------------------')
 
+    resume_run = False
     if save_results and os.path.exists(output_file):
-        print('\n\t >> Results found on '+output_file+'. Reading them and skipping sampling...')
+        print('\n\t >> Results found on '+output_file+'. Reading them...')
         S = pickle.load(open(output_file, 'rb'))
-        return S
+        times_S = list(S.keys())
+
+        # Check if Delta is larger than the latest delta in the results. If this is the case, 
+        # return S. If not, resume until new Delta is reached:
+        input_N = S[times_S[-1]]['N']
+        input_K = S[times_S[-1]]['K']
+        input_Delta = S[times_S[-1]]['Current_Delta']
+
+        if Delta > input_Delta and input_N == N and input_K == K:
+            print('\t \t - Input run is the same as the results.pkl file. Reading in results.pkl...')
+            return S
+
+        else:
+            if input_N == N and input_K == K:
+                output_file_wo_extension = output_file.split('.')[0]
+                sufix = 'continued'
+                while True:
+                    current_output_file = output_file_wo_extension + '_' + sufix + '.pkl'
+                    if os.path.exists(current_output_file):
+                        sufix = 'continued_continued'
+                    else:
+                        break
+                resume_run = True
+                output_file = current_output_file
+                print('\t \t - Input run is the same, but with a lower convergence. Continuing run; saving to '+current_output_file+'...')
+            else:
+                output_file_wo_extension = output_file.split('.')[0]
+                current_output_file = output_file_wo_extension + '_N' + str(N) + '_K' + str(K) + '.pkl'
+                print('\t \t - Input has N = '+str(N)+' and K = '+str(K)+'. Starting a new run...')
+                S = sample(prior, distance, simulator, M = M, N = N, Delta = Delta, verbose = verbose, save_results = save_results, output_file = current_output_file)
+                return S
 
     # Check weird user inputs:
     if N > M:
@@ -91,40 +123,48 @@ def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01, verbose = 
     ######################################################################
     # STEP 1: find the best particles on the initial draw from the prior #
     ######################################################################
-    print('\n\t >> 1. Starting ABC sampler...')
 
-    # First, generate set of samples from the prior:
-    thetas = prior.sample(nsamples = M)
-    nparameters = len(thetas)
+    if not resume_run:
 
-    # Simulate initial particle system:
-    simulations = simulator.several_simulations(thetas)
+        print('\n\t >> 1. Starting ABC sampler...')
 
-    # Get distances between the dataset and the simulations; sort them out from best to worst, select best N ones:
-    distances = distance.several_distances(simulations)
-    idx = np.argsort(distances)[:N]
-     
-    # Save the N best ones to S0 (i.e., S at t=0):
-    t = 0
-    S = {}
-    S[t] = {}
-    S[t]['thetas'] = [parameter[idx] for parameter in thetas]
-    S[t]['distances'] = distances[idx]
+        # First, generate set of samples from the prior:
+        thetas = prior.sample(nsamples = M)
+        nparameters = len(thetas)
 
-    # Get covariance matrix for these thetas:
-    S[t]['covariance'] = np.cov(S[0]['thetas'])
+        # Simulate initial particle system:
+        simulations = simulator.several_simulations(thetas)
 
-    # Calculate and save inital weights:
-    S[t]['weights'] = np.ones(N)/N
+        # Get distances between the dataset and the simulations; sort them out from best to worst, select best N ones:
+        distances = distance.several_distances(simulations)
+        idx = np.argsort(distances)[:N]
+         
+        # Save the N best ones to S0 (i.e., S at t=0):
+        t = 0
+        S = {}
+        S[t] = {}
+        S[t]['thetas'] = [parameter[idx] for parameter in thetas]
+        S[t]['distances'] = distances[idx]
 
-    print('\t \t - Initial N particles successfully generated.')
+        # Get covariance matrix for these thetas:
+        S[t]['covariance'] = np.cov(S[0]['thetas'])
 
+        # Calculate and save inital weights:
+        S[t]['weights'] = np.ones(N)/N
+
+        print('\t \t - Initial N particles successfully generated.')
+        Current_Delta = np.inf
+
+    else:
+
+        print('\n\t >> 1. Resuming ABC sampling...')
+        t = times_S[-1]
+        Current_Delta = S[t]['Current_Delta']
     ######################################################################
     # STEP 2: iterate to find sub-particle systems of draws for t > 0    #
     ######################################################################
 
     # Define parameters that are going to be used in the iteration:
-    Current_Delta = np.inf
     idx_quantile = int(N * 0.75)
     idx_N = np.arange(N)
 
@@ -196,8 +236,11 @@ def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01, verbose = 
         # Get (weighted) covariance matrix:
         S[t]['covariance'] = np.cov(S[t]['thetas'], aweights = S[t]['weights'])
 
-        # Calculate the current delta to see if we've completed the sampling:
+        # Calculate and save the current delta to see if we've completed the sampling:
         Current_Delta = np.double(N)/np.double(K)
+        S[t]['N'] = N
+        S[t]['K'] = K
+        S[t]['Current_Delta'] = Current_Delta
 
         percent_delta = 1. - ((Current_Delta - Delta)/Current_Delta)
         if percent_delta < 1.:
