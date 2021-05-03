@@ -30,7 +30,7 @@ def function_quantiles(X, alpha = 0.68, method = 'median'):
     median_model, lower_band, upper_band = np.zeros(X.shape[1]), np.zeros(X.shape[1]), np.zeros(X.shape[1])
 
     for i in range(X.shape[1]):
-        median_model[i], upper_band[i], lower_band[i] = get_quantiles(X[:,i])
+        median_model[i], upper_band[i], lower_band[i] = get_quantiles(X[:,i], alpha = alpha)
 
     return median_model, upper_band, lower_band
 

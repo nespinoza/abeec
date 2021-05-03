@@ -89,20 +89,22 @@ def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01, verbose = 
         # Check if Delta is larger than the latest delta in the results. If this is the case, 
         # return S. If not, resume until new Delta is reached:
         input_N = S[times_S[-1]]['N']
-        input_K = S[times_S[-1]]['K']
+        input_M = S[times_S[-1]]['M']
         input_Delta = S[times_S[-1]]['Current_Delta']
 
-        if Delta > input_Delta and input_N == N and input_K == K:
+        if Delta > input_Delta and input_N == N and input_M == M:
             print('\t \t - Input run is the same as the results.pkl file. Reading in results.pkl...')
             return S
 
         else:
-            if input_N == N and input_K == K:
+            if input_N == N and input_M == M:
                 output_file_wo_extension = output_file.split('.')[0]
                 sufix = 'continued'
                 while True:
                     current_output_file = output_file_wo_extension + '_' + sufix + '.pkl'
                     if os.path.exists(current_output_file):
+                        S = sample(prior, distance, simulator, M = M, N = N, Delta = Delta, verbose = verbose, save_results = save_results, output_file = current_output_file)
+                        return S
                         sufix = 'continued_continued'
                     else:
                         break
@@ -111,8 +113,8 @@ def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01, verbose = 
                 print('\t \t - Input run is the same, but with a lower convergence. Continuing run; saving to '+current_output_file+'...')
             else:
                 output_file_wo_extension = output_file.split('.')[0]
-                current_output_file = output_file_wo_extension + '_N' + str(N) + '_K' + str(K) + '.pkl'
-                print('\t \t - Input has N = '+str(N)+' and K = '+str(K)+'. Starting a new run...')
+                current_output_file = output_file_wo_extension + '_N' + str(N) + '_M' + str(M) + '.pkl'
+                print('\t \t - Input has N = '+str(N)+' and M = '+str(M)+'. Starting a new run...')
                 S = sample(prior, distance, simulator, M = M, N = N, Delta = Delta, verbose = verbose, save_results = save_results, output_file = current_output_file)
                 return S
 
@@ -239,7 +241,7 @@ def sample(prior, distance, simulator, M = 300, N = 30, Delta = 0.01, verbose = 
         # Calculate and save the current delta to see if we've completed the sampling:
         Current_Delta = np.double(N)/np.double(K)
         S[t]['N'] = N
-        S[t]['K'] = K
+        S[t]['M'] = M
         S[t]['Current_Delta'] = Current_Delta
 
         percent_delta = 1. - ((Current_Delta - Delta)/Current_Delta)
