@@ -12,6 +12,9 @@ from psd_utils import tso_prior, tso_distance, tso_simulator
 # Define which detector/subarray is going to be fit:
 detector = 'SUBSTRIP96'
 
+# Define file saving the indexes used to bin the PSD:
+indexes_filename = 'data/indexes.npy'
+
 if detector == 'SUBSTRIP256':
 
     frequency_filename = 'data/farray256_otis.npy'
@@ -32,7 +35,6 @@ elif detector == 'NRS1':
 
     frequency_filename = 'data/frequencies.npy'
     psd_filename = 'data/median_NRS1_88.npy'
-    indexes_filename = 'data/indexes.npy'
     ncolumns = 2048
     nrows = 512
     ngroups = 88
@@ -41,7 +43,6 @@ elif detector == 'NRS2':
 
     frequency_filename = 'data/frequencies.npy'
     psd_filename = 'data/median_NRS2_88.npy'
-    indexes_filename = 'data/indexes.npy'
     ncolumns = 2048
     nrows = 512 
     ngroups = 88
