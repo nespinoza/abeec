@@ -20,7 +20,7 @@ if detector == 'SUBSTRIP256':
     nrows = 256
     ngroups = 199
 
-elif detector = 'SUBSTRIP96':
+elif detector == 'SUBSTRIP96':
 
     frequency_filename = 'data/farray96_otis.npy'
     psd_filename = 'data/median_power96_otis.npy'
@@ -35,6 +35,15 @@ elif detector == 'NRS1':
     indexes_filename = 'data/indexes.npy'
     ncolumns = 2048
     nrows = 512
+    ngroups = 88
+
+elif detector == 'NRS2':
+
+    frequency_filename = 'data/frequencies.npy'
+    psd_filename = 'data/median_NRS2_88.npy'
+    indexes_filename = 'data/indexes.npy'
+    ncolumns = 2048
+    nrows = 512 
     ngroups = 88
 
 # Perform ABC sampling:
