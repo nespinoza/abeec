@@ -20,4 +20,4 @@ This is a 3-parameter fit, where the parameters are `beta` and `sigma_flicker`, 
 
 There are two scripts that define the data, prior and distance calculation functions: the `psd_utils.py` and the `data_utils.py` functions. The latter is the simulator, the former is the main function that hold the distance, simulator and prior classes.
 
-The code is then run using the `run.py` script.
+The code is then run using the `run.py` script. Options to define what to fit are on the `user_options.py` script.
